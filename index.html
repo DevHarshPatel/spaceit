@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spaceit - Text Spacing Tool</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(120deg, #a1c4fd 0%, #c2e9fb 100%);
+        }
+        .custom-shadow {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="flex justify-between items-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-800">Spaceit</h1>
+            <div class="text-gray-600">by Harsh Patel</div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="bg-white rounded-lg p-6 custom-shadow">
+            <div class="mb-6">
+                <label for="input-text" class="block text-gray-700 text-sm font-bold mb-2">
+                    Enter your text:
+                </label>
+                <textarea 
+                    id="input-text" 
+                    class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300"
+                    rows="4"
+                    placeholder="Enter text without spaces..."
+                ></textarea>
+            </div>
+
+            <div class="mb-6">
+                <div class="flex justify-between items-center mb-2">
+                    <label class="block text-gray-700 text-sm font-bold">
+                        Result:
+                    </label>
+                    <button 
+                        id="copy-btn"
+                        class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
+                        onclick="copyResult()"
+                    >
+                        <i class="fas fa-copy"></i>
+                        Copy
+                    </button>
+                </div>
+                <div 
+                    id="result-text"
+                    class="w-full p-3 min-h-[100px] border rounded-lg bg-gray-50"
+                >
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const inputText = document.getElementById('input-text');
+        const resultText = document.getElementById('result-text');
+        const copyBtn = document.getElementById('copy-btn');
+
+        let typingTimer;
+        const doneTypingInterval = 500; // ms
+
+        inputText.addEventListener('input', function() {
+            clearTimeout(typingTimer);
+            typingTimer = setTimeout(processText, doneTypingInterval);
+        });
+
+        function processText() {
+            const text = inputText.value;
+            if (!text.trim()) {
+                resultText.textContent = '';
+                return;
+            }
+
+            fetch('/process', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ text: text })
+            })
+            .then(response => response.json())
+            .then(data => {
+                resultText.textContent = data.result;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                resultText.textContent = 'Error processing text';
+            });
+        }
+
+        function copyResult() {
+            const text = resultText.textContent;
+            if (!text) return;
+
+            navigator.clipboard.writeText(text).then(() => {
+                // Visual feedback
+                copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                setTimeout(() => {
+                    copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copy';
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>
